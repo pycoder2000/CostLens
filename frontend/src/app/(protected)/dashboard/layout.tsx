@@ -1,14 +1,21 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Fragment } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
+import {
+    Disclosure,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    Transition,
+} from "@headlessui/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Fragment } from "react";
 
 function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }
 
 export default function DashboardLayout({
@@ -20,16 +27,16 @@ export default function DashboardLayout({
   const router = useRouter();
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', current: true },
-    { name: 'Resources', href: '/dashboard/resources', current: false },
-    ...(user?.role === 'admin'
-      ? [{ name: 'Teams', href: '/dashboard/teams', current: false }]
+    { name: "Dashboard", href: "/dashboard", current: true },
+    { name: "Resources", href: "/dashboard/resources", current: false },
+    ...(user?.role === "admin"
+      ? [{ name: "Teams", href: "/dashboard/teams", current: false }]
       : []),
   ];
 
   const handleLogout = () => {
     logout();
-    router.push('/login');
+    router.push("/login");
   };
 
   return (
@@ -52,9 +59,9 @@ export default function DashboardLayout({
                         href={item.href}
                         className={classNames(
                           item.current
-                            ? 'border-indigo-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                            ? "border-indigo-500 text-gray-900"
+                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700",
+                          "inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium"
                         )}
                       >
                         {item.name}
@@ -65,14 +72,14 @@ export default function DashboardLayout({
                 <div className="hidden sm:ml-6 sm:flex sm:items-center">
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                      <MenuButton className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span className="sr-only">Open user menu</span>
                         <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
                           <span className="text-indigo-600 font-medium">
-                            {user?.email[0].toUpperCase()}
+                            {user?.email ? user.email[0].toUpperCase() : '?'}
                           </span>
                         </div>
-                      </Menu.Button>
+                      </MenuButton>
                     </div>
                     <Transition
                       as={Fragment}
@@ -83,21 +90,24 @@ export default function DashboardLayout({
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              onClick={handleLogout}
-                              className={classNames(
-                                active ? 'bg-gray-100' : '',
-                                'block w-full px-4 py-2 text-left text-sm text-gray-700'
-                              )}
-                            >
-                              Sign out
-                            </button>
-                          )}
-                        </Menu.Item>
-                      </Menu.Items>
+                      <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <MenuItem>
+                          <Link
+                            href="/dashboard/profile"
+                            className="block px-4 py-2 text-sm text-gray-700 ui-active:bg-gray-100"
+                          >
+                            Profile
+                          </Link>
+                        </MenuItem>
+                        <MenuItem>
+                          <button
+                            onClick={handleLogout}
+                            className="block w-full px-4 py-2 text-left text-sm text-gray-700 ui-active:bg-gray-100"
+                          >
+                            Sign out
+                          </button>
+                        </MenuItem>
+                      </MenuItems>
                     </Transition>
                   </Menu>
                 </div>
@@ -123,9 +133,9 @@ export default function DashboardLayout({
                     href={item.href}
                     className={classNames(
                       item.current
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
-                      'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                        ? "bg-indigo-50 border-indigo-500 text-indigo-700"
+                        : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700",
+                      "block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
                     )}
                   >
                     {item.name}

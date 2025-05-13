@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 interface Team {
   id: number;
@@ -15,47 +15,68 @@ interface Team {
 interface User {
   id: number;
   email: string;
-  role: string;
+  role?: string;
   team_id: number | null;
+  password: string;
 }
 
 export default function TeamsPage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newTeamName, setNewTeamName] = useState('');
-  const [newTeamDescription, setNewTeamDescription] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [newTeamName, setNewTeamName] = useState("");
+  const [newTeamDescription, setNewTeamDescription] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.access_token) {
+        setError("Authentication required");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = { Authorization: `Bearer ${user.access_token}` };
 
         // Fetch teams
-        const teamsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/teams`, { headers });
+        const teamsResponse = await axios.get<Team[]>(
+          `${process.env.NEXT_PUBLIC_API_URL}/teams`,
+          { headers }
+        );
         setTeams(teamsResponse.data);
 
-        // Fetch users
-        const usersResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users`, { headers });
-        setUsers(usersResponse.data);
+        // Only fetch users if admin
+        if (user.role === "admin") {
+          const usersResponse = await axios.get<User[]>(
+            `${process.env.NEXT_PUBLIC_API_URL}/users`,
+            { headers }
+          );
+          setUsers(usersResponse.data);
+        }
+        setError(null);
       } catch (error) {
-        console.error('Error fetching teams data:', error);
+        console.error("Error fetching teams data:", error);
+        setError("Failed to fetch teams data");
       } finally {
         setLoading(false);
       }
     };
 
-    if (token) {
-      fetchData();
-    }
-  }, [token]);
+    fetchData();
+  }, [user]);
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.access_token) {
+      setError("Authentication required");
+      return;
+    }
+
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-      const response = await axios.post(
+      const headers = { Authorization: `Bearer ${user.access_token}` };
+      const response = await axios.post<Team>(
         `${process.env.NEXT_PUBLIC_API_URL}/teams`,
         {
           name: newTeamName,
@@ -64,16 +85,23 @@ export default function TeamsPage() {
         { headers }
       );
       setTeams([...teams, response.data]);
-      setNewTeamName('');
-      setNewTeamDescription('');
+      setNewTeamName("");
+      setNewTeamDescription("");
+      setError(null);
     } catch (error) {
-      console.error('Error creating team:', error);
+      console.error("Error creating team:", error);
+      setError("Failed to create team");
     }
   };
 
   const handleAssignUser = async (userId: number, teamId: number | null) => {
+    if (!user?.access_token) {
+      setError("Authentication required");
+      return;
+    }
+
     try {
-      const headers = { Authorization: `Bearer ${token}` };
+      const headers = { Authorization: `Bearer ${user.access_token}` };
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/users/${userId}/team/${teamId}`,
         {},
@@ -85,22 +113,32 @@ export default function TeamsPage() {
           user.id === userId ? { ...user, team_id: teamId } : user
         )
       );
+      setError(null);
     } catch (error) {
-      console.error('Error assigning user to team:', error);
+      console.error("Error assigning user to team:", error);
+      setError("Failed to assign user to team");
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-red-600 text-lg">{error}</div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {user?.role === 'admin' && (
+      {user?.role === "admin" && (
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
@@ -108,7 +146,10 @@ export default function TeamsPage() {
             </h3>
             <form onSubmit={handleCreateTeam} className="mt-4 space-y-4">
               <div>
-                <label htmlFor="team-name" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="team-name"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Team Name
                 </label>
                 <input
@@ -116,12 +157,15 @@ export default function TeamsPage() {
                   id="team-name"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2.5 px-3 text-gray-900"
                   required
                 />
               </div>
               <div>
-                <label htmlFor="team-description" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="team-description"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Description
                 </label>
                 <textarea
@@ -145,9 +189,7 @@ export default function TeamsPage() {
 
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900">
-            Teams
-          </h3>
+          <h3 className="text-lg font-medium leading-6 text-gray-900">Teams</h3>
           <div className="mt-4">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -183,7 +225,11 @@ export default function TeamsPage() {
                         {team.description}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {users.filter((user) => user.team_id === team.id).length} members
+                        {
+                          users.filter((user) => user.team_id === team.id)
+                            .length
+                        }{" "}
+                        members
                       </td>
                     </tr>
                   ))}
@@ -194,7 +240,7 @@ export default function TeamsPage() {
         </div>
       </div>
 
-      {user?.role === 'admin' && (
+      {user?.role === "admin" && (
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
@@ -236,7 +282,7 @@ export default function TeamsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <select
-                            value={user.team_id || ''}
+                            value={user.team_id || ""}
                             onChange={(e) =>
                               handleAssignUser(
                                 user.id,

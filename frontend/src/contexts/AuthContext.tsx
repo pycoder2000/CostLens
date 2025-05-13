@@ -3,11 +3,11 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
+    createContext,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
 } from "react";
 
 interface User {
@@ -15,6 +15,11 @@ interface User {
   email: string;
   role: string;
   team_id: number | null;
+  access_token: string;
+  token_type: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string | null;
 }
 
 interface AuthContextType {
@@ -42,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login with:", email);
       const response = await axios.post<User>(
         `${process.env.NEXT_PUBLIC_API_URL}/login`,
         {
@@ -49,18 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password,
         }
       );
+
       const userData = response.data;
+      console.log("Login successful, user data:", userData);
       setUser(userData);
 
       // Store in localStorage
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // Also store as cookie for middleware
+      // Also set cookie for middleware
       document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=${
         60 * 60 * 24 * 7
       }`; // 1 week
+      console.log("User cookie set for middleware");
 
-      router.push("/dashboard");
+      // Redirect using window.location for more reliable redirect
+      window.location.href = "/dashboard";
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -70,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    // Clear cookie too
     document.cookie = "user=; path=/; max-age=0";
-
     router.push("/login");
   };
 

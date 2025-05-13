@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 from datetime import datetime, timedelta
 from typing import List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -59,20 +62,35 @@ def update_aws_resource_team(db: Session, resource_id: int, team_id: int):
         db.refresh(db_resource)
     return db_resource
 
+def update_user_team(db: Session, user_id: int, team_id: Optional[int]):
+    db_user = get_user(db, user_id)
+    if db_user:
+        db_user.team_id = team_id
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
 def get_team_costs(
     db: Session,
     team_id: int,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None
-):
-    query = db.query(models.CostRecord).filter(models.CostRecord.team_id == team_id)
+    start_date: str,
+    end_date: str
+) -> List[models.CostRecord]:
+    logger.info(f"Executing database query for team {team_id}")
+    logger.info(f"Date range: {start_date} to {end_date}")
 
-    if start_date:
-        query = query.filter(models.CostRecord.date >= start_date)
-    if end_date:
-        query = query.filter(models.CostRecord.date <= end_date)
+    query = db.query(models.CostRecord).filter(
+        models.CostRecord.team_id == team_id,
+        models.CostRecord.date >= start_date,
+        models.CostRecord.date <= end_date
+    )
 
-    return query.order_by(models.CostRecord.date.desc()).all()
+    # Log the SQL query
+    logger.info(f"SQL Query: {query}")
+
+    results = query.all()
+    logger.info(f"Query returned {len(results)} records")
+    return results
 
 def create_cost_record(db: Session, cost: schemas.CostRecordCreate):
     db_cost = models.CostRecord(**cost.dict())

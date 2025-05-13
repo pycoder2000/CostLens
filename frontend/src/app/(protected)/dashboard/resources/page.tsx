@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 interface AWSResource {
   id: number;
@@ -18,7 +18,7 @@ interface Team {
 }
 
 export default function ResourcesPage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [resources, setResources] = useState<AWSResource[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,31 +27,37 @@ export default function ResourcesPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-
         // Fetch resources
-        const resourcesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/resources`, { headers });
-        setResources(resourcesResponse.data);
+        const resourcesResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/resources`
+        );
+        setResources(resourcesResponse.data as AWSResource[]);
 
         // Fetch teams
-        const teamsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/teams`, { headers });
-        setTeams(teamsResponse.data);
+        const teamsResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/teams`
+        );
+        setTeams(teamsResponse.data as Team[]);
       } catch (error) {
-        console.error('Error fetching resources data:', error);
+        console.error("Error fetching resources data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (token) {
+    if (user) {
       fetchData();
     }
-  }, [token]);
+  }, [user]);
 
-  const handleTeamChange = async (resourceId: number, teamId: number | null) => {
+  const handleTeamChange = async (
+    resourceId: number,
+    teamId: number | null
+  ) => {
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/resources/${resourceId}/team/${teamId}`, {}, { headers });
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/resources/${resourceId}/team/${teamId}`
+      );
 
       setResources((prevResources) =>
         prevResources.map((resource) =>
@@ -61,7 +67,7 @@ export default function ResourcesPage() {
         )
       );
     } catch (error) {
-      console.error('Error updating resource team:', error);
+      console.error("Error updating resource team:", error);
     }
   };
 
@@ -124,7 +130,7 @@ export default function ResourcesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <select
-                        value={resource.team_id || ''}
+                        value={resource.team_id || ""}
                         onChange={(e) =>
                           handleTeamChange(
                             resource.id,
@@ -132,7 +138,9 @@ export default function ResourcesPage() {
                           )
                         }
                         className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        disabled={user?.role !== 'admin' && user?.role !== 'team_lead'}
+                        disabled={
+                          user?.role !== "admin" && user?.role !== "team_lead"
+                        }
                       >
                         <option value="">Unassigned</option>
                         {teams.map((team) => (

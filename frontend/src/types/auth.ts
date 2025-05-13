@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'team_lead' | 'viewer';
+export type UserRole = "admin" | "team_lead" | "viewer";
 
 export interface User {
   id: number;
@@ -11,11 +11,6 @@ export interface User {
 }
 
 export interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
-}
-
-export interface AuthResponse {
-  access_token: string;
-  token_type: string;
 }

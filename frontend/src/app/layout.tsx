@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className={`${inter.className} min-h-screen bg-gray-50 dark:bg-gray-900`}>
       {children}
     </div>
   );
@@ -25,11 +25,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-gray-50`}>
-        <AuthProvider>
-          <ClientLayout>{children}</ClientLayout>
-        </AuthProvider>
-      </body>
+      <body>
+  <AuthProvider>
+    <ClientLayout>{children}</ClientLayout>
+  </AuthProvider>
+</body>
     </html>
   );
 }
