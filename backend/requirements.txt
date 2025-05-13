@@ -7,5 +7,5 @@ passlib==1.7.4
 pydantic
 apscheduler==3.10.4
 alembic==1.13.1
-python-multipart==0.0.9
+python-multipart==0.0.18
 python-dotenv==1.0.1
